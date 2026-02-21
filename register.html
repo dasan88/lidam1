@@ -56,16 +56,21 @@
             <p class="hint">강의실 이름 변경/삭제 시 시간표와 등록 데이터에 즉시 반영됩니다.</p>
           </div>
           <div class="cloud-admin">
-            <h4>공유 DB 설정 (Supabase)</h4>
-            <div class="room-admin-row">
-              <input id="cloud-url" type="text" placeholder="Project URL (https://xxxx.supabase.co)" />
-              <button id="save-cloud-config-btn" type="button" class="secondary-btn">설정 저장</button>
-            </div>
-            <div class="room-admin-row">
-              <input id="cloud-key" type="text" placeholder="Anon public key" />
-              <button id="test-cloud-sync-btn" type="button">연결 테스트</button>
+            <div class="cloud-admin-head">
+              <h4>공유 DB 설정 (Supabase)</h4>
+              <button id="toggle-cloud-config-btn" type="button" class="secondary-btn">접기</button>
             </div>
             <p id="cloud-status" class="hint">현재: 로컬 모드</p>
+            <div id="cloud-admin-body" class="cloud-admin-body">
+              <div class="room-admin-row">
+                <input id="cloud-url" type="text" placeholder="Project URL (https://xxxx.supabase.co)" />
+                <button id="save-cloud-config-btn" type="button" class="secondary-btn">설정 저장</button>
+              </div>
+              <div class="room-admin-row">
+                <input id="cloud-key" type="text" placeholder="Anon public key" />
+                <button id="test-cloud-sync-btn" type="button">연결 테스트</button>
+              </div>
+            </div>
           </div>
         </section>
 

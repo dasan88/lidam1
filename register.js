@@ -20,10 +20,13 @@ const cloudKeyEl = document.getElementById("cloud-key");
 const saveCloudConfigBtn = document.getElementById("save-cloud-config-btn");
 const testCloudSyncBtn = document.getElementById("test-cloud-sync-btn");
 const cloudStatusEl = document.getElementById("cloud-status");
+const cloudAdminBodyEl = document.getElementById("cloud-admin-body");
+const toggleCloudConfigBtn = document.getElementById("toggle-cloud-config-btn");
 const formModeBadgeEl = document.getElementById("form-mode-badge");
 const cancelEditBtn = document.getElementById("cancel-edit-btn");
 const submitBtn = document.getElementById("submit-btn");
 const CAL_WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
+const CLOUD_CONFIG_COLLAPSE_KEY = "cloudConfigCollapsed";
 
 let pickerBackdropEl = null;
 let pickerPopoverEl = null;
@@ -31,6 +34,7 @@ let pickerActiveInput = null;
 let pickerViewMonth = new Date();
 let editingEntryId = null;
 let isEntryListCollapsed = false;
+let isCloudConfigCollapsed = false;
 
 function getSelectedWeekdays() {
   return Array.from(document.querySelectorAll('input[name="weekday"]:checked')).map((el) => el.value);
@@ -242,6 +246,12 @@ function syncCloudStatusUi() {
   cloudStatusEl.textContent = isCloudSyncEnabled()
     ? "현재: 공유 모드(Supabase)"
     : "현재: 로컬 모드";
+}
+
+function syncCloudConfigCollapseUi() {
+  cloudAdminBodyEl.classList.toggle("is-collapsed", isCloudConfigCollapsed);
+  toggleCloudConfigBtn.textContent = isCloudConfigCollapsed ? "펼치기" : "접기";
+  localStorage.setItem(CLOUD_CONFIG_COLLAPSE_KEY, isCloudConfigCollapsed ? "1" : "0");
 }
 
 function refreshRoomRenamePlaceholder() {
@@ -612,6 +622,10 @@ toggleEntryListBtn.addEventListener("click", () => {
   isEntryListCollapsed = !isEntryListCollapsed;
   syncEntryListCollapseUi();
 });
+toggleCloudConfigBtn.addEventListener("click", () => {
+  isCloudConfigCollapsed = !isCloudConfigCollapsed;
+  syncCloudConfigCollapseUi();
+});
 monthFilterEl.addEventListener("change", renderEntryList);
 
 saveCloudConfigBtn.addEventListener("click", () => {
@@ -743,6 +757,8 @@ async function initializeRegisterPage() {
   setEditMode(false);
   renderEntryList();
   syncEntryListCollapseUi();
+  isCloudConfigCollapsed = localStorage.getItem(CLOUD_CONFIG_COLLAPSE_KEY) === "1";
+  syncCloudConfigCollapseUi();
   syncCloudStatusUi();
 }
 

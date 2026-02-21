@@ -393,9 +393,24 @@ h2 {
 }
 
 .cloud-admin h4 {
-  margin: 0 0 8px;
+  margin: 0;
   color: #125077;
   font-size: 14px;
+}
+
+.cloud-admin-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.cloud-admin-head button {
+  min-width: 92px;
+}
+
+.cloud-admin-body.is-collapsed {
+  display: none;
 }
 
 .register-page input:not([type="checkbox"]),
