@@ -159,6 +159,63 @@ function formatEntrySlots(entry) {
   return `${entry.startSlot}~${entry.endSlot}`;
 }
 
+function hasWeekdayOverlap(aWeekdays, bWeekdays) {
+  const bSet = new Set(bWeekdays || []);
+  return (aWeekdays || []).some((day) => bSet.has(day));
+}
+
+function hasDateOverlap(aStartDate, aEndDate, bStartDate, bEndDate) {
+  return !(aEndDate < bStartDate || aStartDate > bEndDate);
+}
+
+function hasSlotOverlap(aStartSlot, aEndSlot, bStartSlot, bEndSlot) {
+  const aStart = getSlotIndex(aStartSlot);
+  const aEnd = getSlotIndex(aEndSlot);
+  const bStart = getSlotIndex(bStartSlot);
+  const bEnd = getSlotIndex(bEndSlot);
+  return !(aEnd < bStart || aStart > bEnd);
+}
+
+function getOverlapWeekdays(aWeekdays, bWeekdays) {
+  const bSet = new Set(bWeekdays || []);
+  return (aWeekdays || []).filter((day) => bSet.has(day));
+}
+
+function getOverlapDateRange(aStartDate, aEndDate, bStartDate, bEndDate) {
+  const start = aStartDate > bStartDate ? aStartDate : bStartDate;
+  const end = aEndDate < bEndDate ? aEndDate : bEndDate;
+  return { start, end };
+}
+
+function getOverlapSlotRange(aStartSlot, aEndSlot, bStartSlot, bEndSlot) {
+  const startIdx = Math.max(getSlotIndex(aStartSlot), getSlotIndex(bStartSlot));
+  const endIdx = Math.min(getSlotIndex(aEndSlot), getSlotIndex(bEndSlot));
+  return `${SLOT_ORDER[startIdx]}~${SLOT_ORDER[endIdx]}`;
+}
+
+function calculateSessionCount(entry) {
+  const weekdays = new Set(entry.weekdays || []);
+  if (weekdays.size === 0) return 0;
+
+  const start = parseDateOnly(entry.startDate);
+  const end = parseDateOnly(entry.endDate);
+  const startIdx = getSlotIndex(entry.startSlot);
+  const endIdx = getSlotIndex(entry.endSlot);
+  if (startIdx === -1 || endIdx === -1 || endIdx < startIdx) return 0;
+
+  const slotsPerDay = endIdx - startIdx + 1;
+  let matchedDays = 0;
+  const cursor = new Date(start);
+
+  while (cursor <= end) {
+    const weekday = WEEKDAY_KO[cursor.getDay()];
+    if (weekdays.has(weekday)) matchedDays += 1;
+    cursor.setDate(cursor.getDate() + 1);
+  }
+
+  return matchedDays * slotsPerDay;
+}
+
 function getMonthKey(dateStr) {
   return dateStr.slice(0, 7);
 }
@@ -275,7 +332,7 @@ function renderEntryList() {
 
   if (filteredEntries.length === 0) {
     const tr = document.createElement("tr");
-    tr.innerHTML = `<td colspan="7">선택한 월에 등록된 수업이 없습니다.</td>`;
+    tr.innerHTML = `<td colspan="8">선택한 월에 등록된 수업이 없습니다.</td>`;
     entryListBodyEl.appendChild(tr);
     return;
   }
@@ -292,13 +349,15 @@ function renderEntryList() {
     .forEach((monthKey) => {
       const monthTr = document.createElement("tr");
       monthTr.className = "month-group-row";
-      monthTr.innerHTML = `<td colspan="7">${formatMonthLabel(monthKey)}</td>`;
+      monthTr.innerHTML = `<td colspan="8">${formatMonthLabel(monthKey)}</td>`;
       entryListBodyEl.appendChild(monthTr);
 
       grouped[monthKey].forEach((entry) => {
+        const sessionCount = calculateSessionCount(entry);
         const tr = document.createElement("tr");
         tr.innerHTML = `
           <td>${entry.name}</td>
+          <td>${sessionCount}회</td>
           <td>${entry.room}</td>
           <td>${entry.startDate} ~ ${entry.endDate}</td>
           <td>${formatEntrySlots(entry)}</td>
@@ -397,6 +456,38 @@ form.addEventListener("submit", (e) => {
     slotTimes,
     weekdays,
   };
+
+  const conflicts = entries.filter((entry) => {
+    if (editingEntryId && entry.id === editingEntryId) return false;
+    if (entry.room !== payload.room) return false;
+    if (!hasDateOverlap(payload.startDate, payload.endDate, entry.startDate, entry.endDate)) return false;
+    if (!hasWeekdayOverlap(payload.weekdays, entry.weekdays)) return false;
+    if (!hasSlotOverlap(payload.startSlot, payload.endSlot, entry.startSlot, entry.endSlot)) return false;
+    return true;
+  });
+
+  if (conflicts.length > 0) {
+    const details = conflicts.map((entry) => {
+      const overlapDate = getOverlapDateRange(
+        payload.startDate,
+        payload.endDate,
+        entry.startDate,
+        entry.endDate
+      );
+      const overlapDays = getOverlapWeekdays(payload.weekdays, entry.weekdays).join(", ");
+      const overlapSlots = getOverlapSlotRange(
+        payload.startSlot,
+        payload.endSlot,
+        entry.startSlot,
+        entry.endSlot
+      );
+      return `- ${entry.name} | 기간 ${overlapDate.start}~${overlapDate.end} | 요일 ${overlapDays} | 시간대 ${overlapSlots}`;
+    });
+    const shouldProceed = confirm(
+      `같은 강의실(${payload.room})에 시간 충돌이 있습니다.\n\n충돌 상세:\n${details.join("\n")}\n\n무시하고 등록하시겠습니까?`
+    );
+    if (!shouldProceed) return;
+  }
 
   if (editingEntryId) {
     const target = entries.find((entry) => entry.id === editingEntryId);

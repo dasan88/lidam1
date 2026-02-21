@@ -6,11 +6,84 @@ const prevDayBtn = document.getElementById("prev-day");
 const nextDayBtn = document.getElementById("next-day");
 const tableFocusBtn = document.getElementById("table-focus-btn");
 const scheduleRoot = document.getElementById("schedule-root");
+const roomFilterEl = document.getElementById("room-filter");
+const classSearchEl = document.getElementById("class-search");
 const CAL_WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
+const CHIP_THEMES = [
+  { bg: "linear-gradient(180deg, #e8f1ff 0%, #d9e8ff 100%)", border: "#b6cdf7", name: "#0b3c85", time: "#0a5bd3" },
+  { bg: "linear-gradient(180deg, #e8fff2 0%, #d4f5e4 100%)", border: "#9cd8bb", name: "#145a3a", time: "#17754a" },
+  { bg: "linear-gradient(180deg, #fff3e8 0%, #ffe1c7 100%)", border: "#f0bf8f", name: "#8a4d17", time: "#a6601f" },
+  { bg: "linear-gradient(180deg, #f1ebff 0%, #e0d3ff 100%)", border: "#c4b0f6", name: "#4d2b87", time: "#5f39a3" },
+  { bg: "linear-gradient(180deg, #ffeaf1 0%, #ffd5e5 100%)", border: "#f3b1cd", name: "#8b2755", time: "#a73567" },
+];
 
 let pickerBackdropEl = null;
 let pickerPopoverEl = null;
 let pickerViewMonth = new Date();
+
+function getThemeIndex(key) {
+  const text = String(key || "");
+  let hash = 0;
+  for (let i = 0; i < text.length; i += 1) {
+    hash = (hash * 31 + text.charCodeAt(i)) >>> 0;
+  }
+  return hash % CHIP_THEMES.length;
+}
+
+function getDayThemeIndex(dateStr) {
+  return getThemeIndex(`day:${dateStr}`);
+}
+
+function getEntryThemeKey(entry) {
+  return entry.id || entry.name;
+}
+
+function buildDayThemeMap(entries, viewDate, rooms) {
+  const map = new Map();
+  const used = new Set();
+
+  entries.forEach((entry) => {
+    const isActiveToday = rooms.some((room) =>
+      SLOT_ORDER.some((slot) => isEntryActiveOn(entry, viewDate, slot, room))
+    );
+    if (!isActiveToday) return;
+
+    const key = getEntryThemeKey(entry);
+    if (map.has(key)) return;
+
+    let idx = getThemeIndex(key);
+    while (used.has(idx) && used.size < CHIP_THEMES.length) {
+      idx = (idx + 1) % CHIP_THEMES.length;
+    }
+    used.add(idx);
+    map.set(key, idx);
+  });
+
+  return map;
+}
+
+function renderRoomFilterOptions(rooms) {
+  const prev = roomFilterEl.value || "all";
+  roomFilterEl.innerHTML = `<option value="all">전체 강의실</option>`;
+  rooms.forEach((room) => {
+    const option = document.createElement("option");
+    option.value = room;
+    option.textContent = room;
+    roomFilterEl.appendChild(option);
+  });
+
+  if (prev === "all" || rooms.includes(prev)) {
+    roomFilterEl.value = prev;
+  } else {
+    roomFilterEl.value = "all";
+  }
+}
+
+function normalizeSearchText(text) {
+  return String(text || "")
+    .toLowerCase()
+    .replace(/\s+/g, "");
+}
 
 function closeDatePicker() {
   if (pickerBackdropEl) pickerBackdropEl.remove();
@@ -137,9 +210,27 @@ function renderScheduleHead(rooms) {
 
 function renderSchedule() {
   const viewDate = parseDateOnly(viewDateInput.value);
+  const dayThemeIndex = getDayThemeIndex(viewDateInput.value);
 
   const entries = loadEntries();
-  const rooms = loadRooms();
+  const configuredRooms = loadRooms();
+  const entryRooms = Array.from(
+    new Set(entries.map((entry) => String(entry.room || "").trim()).filter(Boolean))
+  );
+  const allRooms = Array.from(new Set([...configuredRooms, ...entryRooms]));
+  renderRoomFilterOptions(allRooms);
+
+  const selectedRoom = roomFilterEl.value;
+  const keyword = normalizeSearchText(classSearchEl.value);
+
+  const rooms = selectedRoom === "all" ? allRooms : allRooms.filter((room) => room === selectedRoom);
+  const filteredEntries = entries.filter((entry) => {
+    if (selectedRoom !== "all" && entry.room !== selectedRoom) return false;
+    if (!keyword) return true;
+    return normalizeSearchText(entry.name).includes(keyword);
+  });
+
+  const dayThemeMap = buildDayThemeMap(filteredEntries, viewDate, rooms);
   renderScheduleHead(rooms);
   scheduleBody.innerHTML = "";
 
@@ -152,7 +243,7 @@ function renderSchedule() {
 
     SLOT_ORDER.forEach((slot) => {
       const td = document.createElement("td");
-      const matched = entries.filter((entry) => isEntryActiveOn(entry, viewDate, slot, room));
+      const matched = filteredEntries.filter((entry) => isEntryActiveOn(entry, viewDate, slot, room));
 
       if (matched.length === 0) {
         td.textContent = "-";
@@ -160,6 +251,14 @@ function renderSchedule() {
         matched.forEach((entry) => {
           const chip = document.createElement("div");
           chip.className = "class-chip";
+          const key = getEntryThemeKey(entry);
+          const themeIndex = dayThemeMap.has(key) ? dayThemeMap.get(key) : dayThemeIndex;
+          const theme = CHIP_THEMES[themeIndex];
+          chip.style.setProperty("--chip-bg", theme.bg);
+          chip.style.setProperty("--chip-border", theme.border);
+          chip.style.setProperty("--chip-name-color", theme.name);
+          chip.style.setProperty("--chip-time-color", theme.time);
+
           const slotTime =
             (entry.slotTimes && entry.slotTimes[slot]) ||
             entry.startTime ||
@@ -209,6 +308,8 @@ async function toggleTableFocusMode() {
 prevDayBtn.addEventListener("click", () => shiftViewDate(-1));
 nextDayBtn.addEventListener("click", () => shiftViewDate(1));
 viewDateInput.addEventListener("click", openDatePicker);
+roomFilterEl.addEventListener("change", renderSchedule);
+classSearchEl.addEventListener("input", renderSchedule);
 tableFocusBtn.addEventListener("click", () => {
   toggleTableFocusMode().catch(() => {
     alert("전체화면 전환을 사용할 수 없는 환경입니다.");
