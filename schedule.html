@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>시간표 보기</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="schedule-page">
+  <main id="schedule-root" class="container schedule-container">
+    <header class="header schedule-header">
+      <h1>시간표 보기</h1>
+      <nav class="top-nav">
+        <a href="index.html">홈</a>
+        <a href="register.html">수업 등록</a>
+      </nav>
+    </header>
+
+    <div class="date-nav">
+      <button id="prev-day" type="button">이전 날짜</button>
+      <input id="view-date" class="date-input" type="text" readonly />
+      <button id="next-day" type="button">다음 날짜</button>
+      <button id="table-focus-btn" type="button">화면 출력</button>
+    </div>
+
+    <section class="card">
+      <p id="now" class="now schedule-now"></p>
+      <table>
+        <thead id="schedule-head"></thead>
+        <tbody id="schedule-body"></tbody>
+      </table>
+    </section>
+  </main>
+
+  <script src="shared.js"></script>
+  <script src="schedule.js"></script>
+</body>
+</html>

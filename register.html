@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>수업 등록</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="register-page">
+  <main class="container">
+    <header class="header register-header">
+      <div>
+        <h1>수업 등록</h1>
+        <p class="subtitle">기간, 시간대, 요일을 설정해 시간표에 자동 반영하세요.</p>
+      </div>
+      <p id="now" class="now"></p>
+      <nav class="top-nav">
+        <a href="index.html">홈</a>
+        <a href="schedule.html">시간표 보기</a>
+      </nav>
+    </header>
+
+    <section class="card register-card">
+      <div class="list-header">
+        <h2>수업 정보 입력</h2>
+        <span id="form-mode-badge" class="mode-badge">등록 모드</span>
+      </div>
+      <form id="class-form" class="register-form">
+        <section class="form-block">
+          <h3>기본 정보</h3>
+          <div class="form-grid">
+            <label>
+              수업명
+              <input id="class-name" type="text" required placeholder="예: 특허법 기본(임병웅)" />
+            </label>
+            <label>
+              강의실
+              <select id="room" required>
+                <option value="101호">101호</option>
+                <option value="102호">102호</option>
+              </select>
+            </label>
+          </div>
+          <div class="room-admin">
+            <h4>강의실 관리</h4>
+            <div class="room-admin-row">
+              <input id="room-new-name" type="text" placeholder="새 강의실 이름 (예: 103호)" />
+              <button id="add-room-btn" type="button">강의실 추가</button>
+            </div>
+            <div class="room-admin-row">
+              <input id="room-rename-name" type="text" placeholder="선택 강의실 새 이름" />
+              <button id="rename-room-btn" type="button" class="secondary-btn">이름 변경</button>
+              <button id="delete-room-btn" type="button" class="danger-btn">강의실 삭제</button>
+            </div>
+            <p class="hint">강의실 이름 변경/삭제 시 시간표와 등록 데이터에 즉시 반영됩니다.</p>
+          </div>
+        </section>
+
+        <section class="form-block">
+          <h3>기간 및 시간대</h3>
+          <div class="form-grid">
+            <label>
+              시작 날짜
+              <input id="start-date" class="date-input" type="text" required readonly />
+            </label>
+            <label>
+              종료 날짜
+              <input id="end-date" class="date-input" type="text" required readonly />
+            </label>
+            <label>
+              시작 시간대
+              <select id="start-slot" required>
+                <option value="오전">오전</option>
+                <option value="오후">오후</option>
+                <option value="저녁">저녁</option>
+              </select>
+            </label>
+            <label>
+              종료 시간대
+              <select id="end-slot" required>
+                <option value="오전">오전</option>
+                <option value="오후">오후</option>
+                <option value="저녁">저녁</option>
+              </select>
+            </label>
+          </div>
+        </section>
+
+        <section class="form-block">
+          <h3>요일 및 시작 시간</h3>
+          <fieldset class="weekday-fieldset">
+            <legend>수업 진행 요일</legend>
+            <label><input type="checkbox" name="weekday" value="월" checked /> 월</label>
+            <label><input type="checkbox" name="weekday" value="화" checked /> 화</label>
+            <label><input type="checkbox" name="weekday" value="수" checked /> 수</label>
+            <label><input type="checkbox" name="weekday" value="목" checked /> 목</label>
+            <label><input type="checkbox" name="weekday" value="금" checked /> 금</label>
+            <label><input type="checkbox" name="weekday" value="토" /> 토</label>
+            <label><input type="checkbox" name="weekday" value="일" /> 일</label>
+          </fieldset>
+          <fieldset class="time-fieldset">
+            <legend>시간대별 시작 시간 (24시간제)</legend>
+            <label class="slot-time-row" data-slot="오전">
+              오전 시작
+              <input id="time-오전" type="text" inputmode="numeric" placeholder="HH:MM" />
+            </label>
+            <label class="slot-time-row" data-slot="오후">
+              오후 시작
+              <input id="time-오후" type="text" inputmode="numeric" placeholder="HH:MM" />
+            </label>
+            <label class="slot-time-row" data-slot="저녁">
+              저녁 시작
+              <input id="time-저녁" type="text" inputmode="numeric" placeholder="HH:MM" />
+            </label>
+          </fieldset>
+        </section>
+
+        <div class="submit-row">
+          <p class="hint">입력한 기간 + 요일 + 시간대 조건으로 시간표 페이지에 자동 반영됩니다.</p>
+          <div class="button-row">
+            <button id="cancel-edit-btn" type="button" class="secondary-btn">수정 취소</button>
+            <button id="submit-btn" type="submit">수업 등록</button>
+          </div>
+        </div>
+      </form>
+    </section>
+
+    <section class="card register-card">
+      <div class="list-header">
+        <h2>등록된 수업 관리</h2>
+        <div class="button-row">
+          <button id="toggle-entry-list-btn" type="button" class="secondary-btn">접기</button>
+          <button id="clear-all-btn" type="button" class="danger-btn">전체 삭제</button>
+        </div>
+      </div>
+      <div id="entry-list-wrap" class="list-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>수업명</th>
+              <th>강의실</th>
+              <th>기간</th>
+              <th>시간대</th>
+              <th>요일</th>
+              <th>수정</th>
+              <th>삭제</th>
+            </tr>
+          </thead>
+          <tbody id="entry-list-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="shared.js"></script>
+  <script src="register.js"></script>
+</body>
+</html>
