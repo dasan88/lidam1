@@ -15,6 +15,11 @@ const roomRenameNameEl = document.getElementById("room-rename-name");
 const addRoomBtn = document.getElementById("add-room-btn");
 const renameRoomBtn = document.getElementById("rename-room-btn");
 const deleteRoomBtn = document.getElementById("delete-room-btn");
+const cloudUrlEl = document.getElementById("cloud-url");
+const cloudKeyEl = document.getElementById("cloud-key");
+const saveCloudConfigBtn = document.getElementById("save-cloud-config-btn");
+const testCloudSyncBtn = document.getElementById("test-cloud-sync-btn");
+const cloudStatusEl = document.getElementById("cloud-status");
 const formModeBadgeEl = document.getElementById("form-mode-badge");
 const cancelEditBtn = document.getElementById("cancel-edit-btn");
 const submitBtn = document.getElementById("submit-btn");
@@ -230,6 +235,15 @@ function syncEntryListCollapseUi() {
   toggleEntryListBtn.textContent = isEntryListCollapsed ? "펼치기" : "접기";
 }
 
+function syncCloudStatusUi() {
+  const cfg = getCloudConfig();
+  cloudUrlEl.value = cfg.url;
+  cloudKeyEl.value = cfg.anonKey;
+  cloudStatusEl.textContent = isCloudSyncEnabled()
+    ? "현재: 공유 모드(Supabase)"
+    : "현재: 로컬 모드";
+}
+
 function refreshRoomRenamePlaceholder() {
   roomRenameNameEl.placeholder = `선택 강의실(${roomSelectEl.value || "-"}) 새 이름`;
 }
@@ -420,7 +434,7 @@ function updateSlotTimeInputs() {
   });
 }
 
-form.addEventListener("submit", (e) => {
+form.addEventListener("submit", async (e) => {
   e.preventDefault();
 
   const name = document.getElementById("class-name").value.trim();
@@ -529,6 +543,7 @@ form.addEventListener("submit", (e) => {
     });
   }
   saveEntries(entries);
+  await cloudSyncPush();
 
   const wasEditMode = Boolean(editingEntryId);
   stopEditMode();
@@ -536,16 +551,6 @@ form.addEventListener("submit", (e) => {
 
   alert(wasEditMode ? "수업이 수정되었습니다." : "수업이 등록되었습니다. 시간표 보기 페이지에서 확인하세요.");
 });
-
-const todayStr = formatDateOnly(new Date());
-startDateEl.value = todayStr;
-endDateEl.value = todayStr;
-renderRoomOptions();
-startSlotEl.value = "오전";
-endSlotEl.value = "저녁";
-document.getElementById("time-오전").value = "09:00";
-document.getElementById("time-오후").value = "13:00";
-document.getElementById("time-저녁").value = "18:00";
 
 ["time-오전", "time-오후", "time-저녁"].forEach((id) => {
   const inputEl = document.getElementById(id);
@@ -563,7 +568,7 @@ window.addEventListener("resize", () => {
   if (pickerActiveInput) positionDatePicker(pickerActiveInput);
 });
 
-entryListBodyEl.addEventListener("click", (e) => {
+entryListBodyEl.addEventListener("click", async (e) => {
   const target = e.target;
   if (!(target instanceof HTMLElement)) return;
   const entryId = target.dataset.id;
@@ -587,15 +592,17 @@ entryListBodyEl.addEventListener("click", (e) => {
 
   const entries = loadEntries().filter((entry) => entry.id !== entryId);
   saveEntries(entries);
+  await cloudSyncPush();
   if (editingEntryId === entryId) {
     stopEditMode();
   }
   renderEntryList();
 });
 
-clearAllBtn.addEventListener("click", () => {
+clearAllBtn.addEventListener("click", async () => {
   if (!confirm("등록된 수업을 모두 삭제할까요?")) return;
   saveEntries([]);
+  await cloudSyncPush();
   stopEditMode();
   renderEntryList();
 });
@@ -607,7 +614,32 @@ toggleEntryListBtn.addEventListener("click", () => {
 });
 monthFilterEl.addEventListener("change", renderEntryList);
 
-addRoomBtn.addEventListener("click", () => {
+saveCloudConfigBtn.addEventListener("click", () => {
+  setCloudConfig(cloudUrlEl.value, cloudKeyEl.value);
+  syncCloudStatusUi();
+  alert("공유 DB 설정이 저장되었습니다.");
+});
+
+testCloudSyncBtn.addEventListener("click", async () => {
+  setCloudConfig(cloudUrlEl.value, cloudKeyEl.value);
+  syncCloudStatusUi();
+  if (!isCloudSyncEnabled()) {
+    alert("URL과 Anon key를 모두 입력해 주세요.");
+    return;
+  }
+
+  const pulled = await cloudSyncPull();
+  if (!pulled) {
+    alert("연결에 실패했습니다. URL/키/테이블 설정을 확인해 주세요.");
+    return;
+  }
+  await cloudSyncPush();
+  renderRoomOptions();
+  renderEntryList();
+  alert("연결 성공! 공유 DB와 동기화되었습니다.");
+});
+
+addRoomBtn.addEventListener("click", async () => {
   const newRoom = roomNewNameEl.value.trim();
   if (!newRoom) {
     alert("추가할 강의실 이름을 입력해 주세요.");
@@ -621,11 +653,12 @@ addRoomBtn.addEventListener("click", () => {
   }
 
   saveRooms([...rooms, newRoom]);
+  await cloudSyncPush();
   renderRoomOptions(newRoom);
   roomNewNameEl.value = "";
 });
 
-renameRoomBtn.addEventListener("click", () => {
+renameRoomBtn.addEventListener("click", async () => {
   const oldRoom = roomSelectEl.value;
   const newRoom = roomRenameNameEl.value.trim();
   if (!oldRoom) return;
@@ -646,6 +679,7 @@ renameRoomBtn.addEventListener("click", () => {
 
   saveRooms(rooms.map((room) => (room === oldRoom ? newRoom : room)));
   saveEntries(loadEntries().map((entry) => (entry.room === oldRoom ? { ...entry, room: newRoom } : entry)));
+  await cloudSyncPush();
 
   if (editingEntryId) {
     const editingEntry = loadEntries().find((entry) => entry.id === editingEntryId);
@@ -659,7 +693,7 @@ renameRoomBtn.addEventListener("click", () => {
   roomRenameNameEl.value = "";
 });
 
-deleteRoomBtn.addEventListener("click", () => {
+deleteRoomBtn.addEventListener("click", async () => {
   const roomToDelete = roomSelectEl.value;
   if (!roomToDelete) return;
 
@@ -679,6 +713,7 @@ deleteRoomBtn.addEventListener("click", () => {
 
   saveRooms(rooms.filter((room) => room !== roomToDelete));
   saveEntries(entries.filter((entry) => entry.room !== roomToDelete));
+  await cloudSyncPush();
 
   if (editingEntryId) {
     const editingEntry = loadEntries().find((entry) => entry.id === editingEntryId);
@@ -691,10 +726,26 @@ deleteRoomBtn.addEventListener("click", () => {
   renderEntryList();
 });
 
-updateSlotTimeInputs();
-setEditMode(false);
-renderEntryList();
-syncEntryListCollapseUi();
+async function initializeRegisterPage() {
+  await cloudSyncPull();
 
+  const todayStr = formatDateOnly(new Date());
+  startDateEl.value = todayStr;
+  endDateEl.value = todayStr;
+  renderRoomOptions();
+  startSlotEl.value = "오전";
+  endSlotEl.value = "저녁";
+  document.getElementById("time-오전").value = "09:00";
+  document.getElementById("time-오후").value = "13:00";
+  document.getElementById("time-저녁").value = "18:00";
+
+  updateSlotTimeInputs();
+  setEditMode(false);
+  renderEntryList();
+  syncEntryListCollapseUi();
+  syncCloudStatusUi();
+}
+
+initializeRegisterPage();
 updateCurrentDateTime(nowEl);
 setInterval(() => updateCurrentDateTime(nowEl), 1000);

@@ -305,6 +305,11 @@ async function toggleTableFocusMode() {
   await scheduleRoot.requestFullscreen();
 }
 
+async function refreshFromCloudAndRender() {
+  await cloudSyncPull();
+  renderSchedule();
+}
+
 prevDayBtn.addEventListener("click", () => shiftViewDate(-1));
 nextDayBtn.addEventListener("click", () => shiftViewDate(1));
 viewDateInput.addEventListener("click", openDatePicker);
@@ -321,10 +326,16 @@ window.addEventListener("resize", () => {
 window.addEventListener("storage", renderSchedule);
 document.addEventListener("fullscreenchange", syncTableFocusUi);
 
-const todayStr = formatDateOnly(new Date());
-viewDateInput.value = todayStr;
+async function initializeSchedulePage() {
+  const todayStr = formatDateOnly(new Date());
+  viewDateInput.value = todayStr;
+  await refreshFromCloudAndRender();
+  syncTableFocusUi();
+}
 
+initializeSchedulePage();
+setInterval(() => {
+  refreshFromCloudAndRender().catch(() => {});
+}, 15000);
 updateCurrentDateTime(nowEl, { showYear: false, prefix: "" });
 setInterval(() => updateCurrentDateTime(nowEl, { showYear: false, prefix: "" }), 1000);
-syncTableFocusUi();
-renderSchedule();

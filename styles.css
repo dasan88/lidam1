@@ -371,6 +371,20 @@ h2 {
   margin: 2px 0 0;
 }
 
+.cloud-admin {
+  margin-top: 12px;
+  border: 1px solid #d2dcf0;
+  border-radius: 10px;
+  padding: 10px;
+  background: #f2fbff;
+}
+
+.cloud-admin h4 {
+  margin: 0 0 8px;
+  color: #125077;
+  font-size: 14px;
+}
+
 .register-page input:not([type="checkbox"]),
 .register-page select {
   width: 100%;
