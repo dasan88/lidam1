@@ -9,6 +9,7 @@ const entryListBodyEl = document.getElementById("entry-list-body");
 const entryListWrapEl = document.getElementById("entry-list-wrap");
 const clearAllBtn = document.getElementById("clear-all-btn");
 const toggleEntryListBtn = document.getElementById("toggle-entry-list-btn");
+const monthFilterEl = document.getElementById("month-filter");
 const roomNewNameEl = document.getElementById("room-new-name");
 const roomRenameNameEl = document.getElementById("room-rename-name");
 const addRoomBtn = document.getElementById("add-room-btn");
@@ -158,6 +159,15 @@ function formatEntrySlots(entry) {
   return `${entry.startSlot}~${entry.endSlot}`;
 }
 
+function getMonthKey(dateStr) {
+  return dateStr.slice(0, 7);
+}
+
+function formatMonthLabel(monthKey) {
+  const [year, month] = monthKey.split("-").map(Number);
+  return `${year}년 ${month}월`;
+}
+
 function syncEntryListCollapseUi() {
   entryListWrapEl.classList.toggle("collapsed", isEntryListCollapsed);
   toggleEntryListBtn.textContent = isEntryListCollapsed ? "펼치기" : "접기";
@@ -238,29 +248,67 @@ function stopEditMode() {
 }
 
 function renderEntryList() {
-  const entries = loadEntries();
+  const entries = loadEntries().sort((a, b) => a.startDate.localeCompare(b.startDate));
   entryListBodyEl.innerHTML = "";
 
-  if (entries.length === 0) {
+  const monthKeys = Array.from(new Set(entries.map((entry) => getMonthKey(entry.startDate))));
+  const selectedMonth = monthFilterEl.value || "all";
+  const prevSelected = selectedMonth;
+
+  monthFilterEl.innerHTML = `<option value="all">전체</option>`;
+  monthKeys.forEach((monthKey) => {
+    const option = document.createElement("option");
+    option.value = monthKey;
+    option.textContent = formatMonthLabel(monthKey);
+    monthFilterEl.appendChild(option);
+  });
+  if (prevSelected === "all" || monthKeys.includes(prevSelected)) {
+    monthFilterEl.value = prevSelected;
+  } else {
+    monthFilterEl.value = "all";
+  }
+
+  const filteredEntries =
+    monthFilterEl.value === "all"
+      ? entries
+      : entries.filter((entry) => getMonthKey(entry.startDate) === monthFilterEl.value);
+
+  if (filteredEntries.length === 0) {
     const tr = document.createElement("tr");
-    tr.innerHTML = `<td colspan="7">등록된 수업이 없습니다.</td>`;
+    tr.innerHTML = `<td colspan="7">선택한 월에 등록된 수업이 없습니다.</td>`;
     entryListBodyEl.appendChild(tr);
     return;
   }
 
-  entries.forEach((entry) => {
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${entry.name}</td>
-      <td>${entry.room}</td>
-      <td>${entry.startDate} ~ ${entry.endDate}</td>
-      <td>${formatEntrySlots(entry)}</td>
-      <td>${(entry.weekdays || []).join(", ")}</td>
-      <td><button type="button" class="secondary-btn edit-entry-btn" data-id="${entry.id}">수정</button></td>
-      <td><button type="button" class="danger-btn delete-entry-btn" data-id="${entry.id}">삭제</button></td>
-    `;
-    entryListBodyEl.appendChild(tr);
+  const grouped = {};
+  filteredEntries.forEach((entry) => {
+    const key = getMonthKey(entry.startDate);
+    if (!grouped[key]) grouped[key] = [];
+    grouped[key].push(entry);
   });
+
+  Object.keys(grouped)
+    .sort()
+    .forEach((monthKey) => {
+      const monthTr = document.createElement("tr");
+      monthTr.className = "month-group-row";
+      monthTr.innerHTML = `<td colspan="7">${formatMonthLabel(monthKey)}</td>`;
+      entryListBodyEl.appendChild(monthTr);
+
+      grouped[monthKey].forEach((entry) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${entry.name}</td>
+          <td>${entry.room}</td>
+          <td>${entry.startDate} ~ ${entry.endDate}</td>
+          <td>${formatEntrySlots(entry)}</td>
+          <td>${(entry.weekdays || []).join(", ")}</td>
+          <td><button type="button" class="secondary-btn edit-entry-btn" data-id="${entry.id}">수정</button></td>
+          <td><button type="button" class="danger-btn delete-entry-btn" data-id="${entry.id}">삭제</button></td>
+        `;
+        entryListBodyEl.appendChild(tr);
+      });
+    });
 }
 
 function updateSlotTimeInputs() {
@@ -431,6 +479,7 @@ toggleEntryListBtn.addEventListener("click", () => {
   isEntryListCollapsed = !isEntryListCollapsed;
   syncEntryListCollapseUi();
 });
+monthFilterEl.addEventListener("change", renderEntryList);
 
 addRoomBtn.addEventListener("click", () => {
   const newRoom = roomNewNameEl.value.trim();
