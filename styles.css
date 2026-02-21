@@ -38,6 +38,19 @@ h2 {
   color: #4b5563;
 }
 
+.version-tag {
+  margin: 8px 0 0;
+  display: inline-block;
+  width: fit-content;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid #c5d5f3;
+  background: linear-gradient(180deg, #edf4ff 0%, #e2edff 100%);
+  color: #173b73;
+  font-size: 13px;
+  font-weight: 700;
+}
+
 .subtitle {
   margin: 6px 0 0;
   color: #4b5563;
