@@ -298,6 +298,33 @@ function startEditEntry(entry) {
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
+function startDuplicateEntry(entry) {
+  editingEntryId = null;
+  setEditMode(false);
+
+  document.getElementById("class-name").value = entry.name;
+  renderRoomOptions(entry.room);
+  startDateEl.value = entry.startDate;
+  endDateEl.value = entry.endDate;
+  startSlotEl.value = entry.startSlot;
+  endSlotEl.value = entry.endSlot;
+
+  document.querySelectorAll('input[name="weekday"]').forEach((el) => {
+    el.checked = (entry.weekdays || []).includes(el.value);
+  });
+
+  document.getElementById("time-오전").value =
+    (entry.slotTimes && entry.slotTimes["오전"]) || "";
+  document.getElementById("time-오후").value =
+    (entry.slotTimes && entry.slotTimes["오후"]) || "";
+  document.getElementById("time-저녁").value =
+    (entry.slotTimes && entry.slotTimes["저녁"]) || "";
+
+  updateSlotTimeInputs();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  alert("수업 정보가 복제되었습니다. 날짜/요일 등을 수정 후 수업 등록을 눌러주세요.");
+}
+
 function stopEditMode() {
   editingEntryId = null;
   setEditMode(false);
@@ -332,7 +359,7 @@ function renderEntryList() {
 
   if (filteredEntries.length === 0) {
     const tr = document.createElement("tr");
-    tr.innerHTML = `<td colspan="8">선택한 월에 등록된 수업이 없습니다.</td>`;
+    tr.innerHTML = `<td colspan="9">선택한 월에 등록된 수업이 없습니다.</td>`;
     entryListBodyEl.appendChild(tr);
     return;
   }
@@ -349,7 +376,7 @@ function renderEntryList() {
     .forEach((monthKey) => {
       const monthTr = document.createElement("tr");
       monthTr.className = "month-group-row";
-      monthTr.innerHTML = `<td colspan="8">${formatMonthLabel(monthKey)}</td>`;
+      monthTr.innerHTML = `<td colspan="9">${formatMonthLabel(monthKey)}</td>`;
       entryListBodyEl.appendChild(monthTr);
 
       grouped[monthKey].forEach((entry) => {
@@ -362,6 +389,7 @@ function renderEntryList() {
           <td>${entry.startDate} ~ ${entry.endDate}</td>
           <td>${formatEntrySlots(entry)}</td>
           <td>${(entry.weekdays || []).join(", ")}</td>
+          <td><button type="button" class="secondary-btn duplicate-entry-btn" data-id="${entry.id}">복제</button></td>
           <td><button type="button" class="secondary-btn edit-entry-btn" data-id="${entry.id}">수정</button></td>
           <td><button type="button" class="danger-btn delete-entry-btn" data-id="${entry.id}">삭제</button></td>
         `;
@@ -540,6 +568,13 @@ entryListBodyEl.addEventListener("click", (e) => {
   if (!(target instanceof HTMLElement)) return;
   const entryId = target.dataset.id;
   if (!entryId) return;
+
+  if (target.classList.contains("duplicate-entry-btn")) {
+    const entry = loadEntries().find((item) => item.id === entryId);
+    if (!entry) return;
+    startDuplicateEntry(entry);
+    return;
+  }
 
   if (target.classList.contains("edit-entry-btn")) {
     const entry = loadEntries().find((item) => item.id === entryId);

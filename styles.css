@@ -86,6 +86,11 @@ h2 {
   background: radial-gradient(circle at top right, #e5f0ff 0%, #f5f8fe 40%, #f2f5fa 100%);
 }
 
+.register-page .container {
+  max-width: min(1500px, 97vw);
+  padding: 0 14px 24px;
+}
+
 .schedule-page {
   background: linear-gradient(180deg, #eef4ff 0%, #f6f9ff 42%, #f3f6fb 100%);
 }
