@@ -306,10 +306,14 @@ async function toggleTableFocusMode() {
   await scheduleRoot.requestFullscreen();
 }
 
-async function refreshFromCloudAndRender() {
+async function refreshFromCloudAndRender(options = {}) {
+  const { preferImmediate = false } = options;
   if (sharedPayload) {
     renderSchedule();
     return;
+  }
+  if (preferImmediate) {
+    renderSchedule();
   }
   if (isCloudSyncEnabled()) {
     await cloudSyncPull();
@@ -346,8 +350,10 @@ async function initializeSchedulePage() {
 
   sharedPayload = readPublicScheduleSharePayload();
 
-  await refreshFromCloudAndRender();
   syncTableFocusUi();
+  refreshFromCloudAndRender({ preferImmediate: true }).catch(() => {
+    renderSchedule();
+  });
 }
 
 initializeSchedulePage();
