@@ -370,14 +370,21 @@ h2 {
 }
 
 .room-admin-head {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+  column-gap: 10px;
+  row-gap: 6px;
+  min-height: 40px;
+  margin-bottom: 8px;
 }
 
 .room-admin-head button {
   min-width: 92px;
+  height: 36px;
+  padding: 0 12px;
+  white-space: nowrap;
+  justify-self: end;
 }
 
 .room-admin-body.is-collapsed {
@@ -414,14 +421,21 @@ h2 {
 }
 
 .cloud-admin-head {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+  column-gap: 10px;
+  row-gap: 6px;
+  min-height: 40px;
+  margin-bottom: 8px;
 }
 
 .cloud-admin-head button {
   min-width: 92px;
+  height: 36px;
+  padding: 0 12px;
+  white-space: nowrap;
+  justify-self: end;
 }
 
 .cloud-admin-body.is-collapsed {
@@ -773,6 +787,17 @@ th {
   .room-admin-row,
   .room-admin-row:first-of-type {
     grid-template-columns: 1fr;
+  }
+
+  .room-admin-head,
+  .cloud-admin-head {
+    grid-template-columns: 1fr;
+    align-items: start;
+  }
+
+  .room-admin-head button,
+  .cloud-admin-head button {
+    justify-self: start;
   }
 
   .list-filter-row {
