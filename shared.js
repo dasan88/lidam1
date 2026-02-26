@@ -209,20 +209,36 @@ function saveRooms(rooms) {
 }
 
 function encodeUtf8ToBase64Url(text) {
-  const bytes = new TextEncoder().encode(String(text));
-  let binary = "";
-  bytes.forEach((b) => {
-    binary += String.fromCharCode(b);
-  });
-  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  const source = String(text);
+  let base64 = "";
+
+  if (typeof TextEncoder !== "undefined") {
+    const bytes = new TextEncoder().encode(source);
+    let binary = "";
+    bytes.forEach((b) => {
+      binary += String.fromCharCode(b);
+    });
+    base64 = btoa(binary);
+  } else {
+    // Fallback for older Safari/WebView environments.
+    base64 = btoa(unescape(encodeURIComponent(source)));
+  }
+
+  return base64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
 function decodeBase64UrlToUtf8(base64Url) {
   let base64 = String(base64Url || "").replace(/-/g, "+").replace(/_/g, "/");
   while (base64.length % 4 !== 0) base64 += "=";
   const binary = atob(base64);
-  const bytes = Uint8Array.from(binary, (ch) => ch.charCodeAt(0));
-  return new TextDecoder().decode(bytes);
+
+  if (typeof TextDecoder !== "undefined") {
+    const bytes = Uint8Array.from(binary, (ch) => ch.charCodeAt(0));
+    return new TextDecoder().decode(bytes);
+  }
+
+  // Fallback for older Safari/WebView environments.
+  return decodeURIComponent(escape(binary));
 }
 
 function buildPublicScheduleShareUrl() {

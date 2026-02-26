@@ -657,32 +657,41 @@ testCloudSyncBtn.addEventListener("click", async () => {
 
 if (createPublicLinkBtn && publicLinkOutputEl) {
   createPublicLinkBtn.addEventListener("click", async () => {
-    const isLive = isCloudSyncEnabled();
-    const url = isLive ? buildPublicScheduleLiveShareUrl() : buildPublicScheduleShareUrl();
-    if (!url) {
-      alert("공유 링크 생성에 실패했습니다. 설정을 확인해 주세요.");
-      return;
-    }
-
-    publicLinkOutputEl.value = url;
-
     try {
-      await navigator.clipboard.writeText(url);
-    } catch {
-      // Clipboard can be blocked by browser policy; keep showing URL in input.
-    }
+      const isLive = isCloudSyncEnabled();
+      const shareBuilder =
+        isLive && typeof buildPublicScheduleLiveShareUrl === "function"
+          ? buildPublicScheduleLiveShareUrl
+          : buildPublicScheduleShareUrl;
+      const url = shareBuilder();
+      if (!url) {
+        alert("공유 링크 생성에 실패했습니다. 설정을 확인해 주세요.");
+        return;
+      }
 
-    const popup = window.open(url, "_blank", "noopener");
-    if (!popup) {
-      alert("링크가 생성되었습니다. 아래 입력칸의 주소를 복사해 새 탭에서 열어주세요.");
-    } else if (isLive) {
-      alert("실시간 공유 링크를 새 탭으로 열었습니다.");
-    } else {
-      alert("공유 링크를 새 탭으로 열었습니다.");
-    }
+      publicLinkOutputEl.value = url;
 
-    if (url.length > 7000) {
-      alert("등록 데이터가 많아 URL 길이가 깁니다. 일부 메신저에서 링크 전달이 제한될 수 있습니다.");
+      try {
+        await navigator.clipboard.writeText(url);
+      } catch {
+        // Clipboard can be blocked by browser policy; keep showing URL in input.
+      }
+
+      const popup = window.open(url, "_blank", "noopener");
+      if (!popup) {
+        alert("링크가 생성되었습니다. 아래 입력칸의 주소를 복사해 새 탭에서 열어주세요.");
+      } else if (isLive) {
+        alert("실시간 공유 링크를 새 탭으로 열었습니다.");
+      } else {
+        alert("공유 링크를 새 탭으로 열었습니다.");
+      }
+
+      if (url.length > 7000) {
+        alert("등록 데이터가 많아 URL 길이가 깁니다. 일부 메신저에서 링크 전달이 제한될 수 있습니다.");
+      }
+    } catch (error) {
+      console.error(error);
+      alert("사파리 캐시 때문에 기능이 오래된 파일을 불러왔을 수 있습니다. 새로고침(Shift+Reload) 후 다시 시도해 주세요.");
     }
   });
 }
