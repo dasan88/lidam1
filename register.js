@@ -655,29 +655,37 @@ testCloudSyncBtn.addEventListener("click", async () => {
   alert("연결 성공! 공유 DB와 동기화되었습니다.");
 });
 
-createPublicLinkBtn.addEventListener("click", async () => {
-  const url = isCloudSyncEnabled() ? buildPublicScheduleLiveShareUrl() : buildPublicScheduleShareUrl();
-  publicLinkOutputEl.value = url;
-
-  try {
-    await navigator.clipboard.writeText(url);
-    if (isCloudSyncEnabled()) {
-      alert("실시간 공유 링크가 생성되어 클립보드에 복사되었습니다.");
-    } else {
-      alert("공유 링크가 생성되어 클립보드에 복사되었습니다.");
+if (createPublicLinkBtn && publicLinkOutputEl) {
+  createPublicLinkBtn.addEventListener("click", async () => {
+    const isLive = isCloudSyncEnabled();
+    const url = isLive ? buildPublicScheduleLiveShareUrl() : buildPublicScheduleShareUrl();
+    if (!url) {
+      alert("공유 링크 생성에 실패했습니다. 설정을 확인해 주세요.");
+      return;
     }
-  } catch {
-    if (isCloudSyncEnabled()) {
-      alert("실시간 공유 링크가 생성되었습니다. 아래 입력칸에서 직접 복사해 주세요.");
-    } else {
-      alert("공유 링크가 생성되었습니다. 아래 입력칸에서 직접 복사해 주세요.");
-    }
-  }
 
-  if (url.length > 7000) {
-    alert("등록 데이터가 많아 URL 길이가 깁니다. 일부 메신저에서 링크 전달이 제한될 수 있습니다.");
-  }
-});
+    publicLinkOutputEl.value = url;
+
+    try {
+      await navigator.clipboard.writeText(url);
+    } catch {
+      // Clipboard can be blocked by browser policy; keep showing URL in input.
+    }
+
+    const popup = window.open(url, "_blank", "noopener");
+    if (!popup) {
+      alert("링크가 생성되었습니다. 아래 입력칸의 주소를 복사해 새 탭에서 열어주세요.");
+    } else if (isLive) {
+      alert("실시간 공유 링크를 새 탭으로 열었습니다.");
+    } else {
+      alert("공유 링크를 새 탭으로 열었습니다.");
+    }
+
+    if (url.length > 7000) {
+      alert("등록 데이터가 많아 URL 길이가 깁니다. 일부 메신저에서 링크 전달이 제한될 수 있습니다.");
+    }
+  });
+}
 
 addRoomBtn.addEventListener("click", async () => {
   const newRoom = roomNewNameEl.value.trim();
