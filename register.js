@@ -22,6 +22,8 @@ const testCloudSyncBtn = document.getElementById("test-cloud-sync-btn");
 const cloudStatusEl = document.getElementById("cloud-status");
 const cloudAdminBodyEl = document.getElementById("cloud-admin-body");
 const toggleCloudConfigBtn = document.getElementById("toggle-cloud-config-btn");
+const createPublicLinkBtn = document.getElementById("create-public-link-btn");
+const publicLinkOutputEl = document.getElementById("public-link-output");
 const formModeBadgeEl = document.getElementById("form-mode-badge");
 const cancelEditBtn = document.getElementById("cancel-edit-btn");
 const submitBtn = document.getElementById("submit-btn");
@@ -651,6 +653,30 @@ testCloudSyncBtn.addEventListener("click", async () => {
   renderRoomOptions();
   renderEntryList();
   alert("연결 성공! 공유 DB와 동기화되었습니다.");
+});
+
+createPublicLinkBtn.addEventListener("click", async () => {
+  const url = isCloudSyncEnabled() ? buildPublicScheduleLiveShareUrl() : buildPublicScheduleShareUrl();
+  publicLinkOutputEl.value = url;
+
+  try {
+    await navigator.clipboard.writeText(url);
+    if (isCloudSyncEnabled()) {
+      alert("실시간 공유 링크가 생성되어 클립보드에 복사되었습니다.");
+    } else {
+      alert("공유 링크가 생성되어 클립보드에 복사되었습니다.");
+    }
+  } catch {
+    if (isCloudSyncEnabled()) {
+      alert("실시간 공유 링크가 생성되었습니다. 아래 입력칸에서 직접 복사해 주세요.");
+    } else {
+      alert("공유 링크가 생성되었습니다. 아래 입력칸에서 직접 복사해 주세요.");
+    }
+  }
+
+  if (url.length > 7000) {
+    alert("등록 데이터가 많아 URL 길이가 깁니다. 일부 메신저에서 링크 전달이 제한될 수 있습니다.");
+  }
 });
 
 addRoomBtn.addEventListener("click", async () => {

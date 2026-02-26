@@ -8,6 +8,7 @@ const tableFocusBtn = document.getElementById("table-focus-btn");
 const scheduleRoot = document.getElementById("schedule-root");
 const roomFilterEl = document.getElementById("room-filter");
 const classSearchEl = document.getElementById("class-search");
+const shareModeNoteEl = document.getElementById("share-mode-note");
 const CAL_WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
 const CHIP_THEMES = [
   { bg: "linear-gradient(180deg, #e8f1ff 0%, #d9e8ff 100%)", border: "#b6cdf7", name: "#0b3c85", time: "#0a5bd3" },
@@ -20,6 +21,8 @@ const CHIP_THEMES = [
 let pickerBackdropEl = null;
 let pickerPopoverEl = null;
 let pickerViewMonth = new Date();
+let sharedPayload = null;
+let isLiveShareMode = false;
 
 function getThemeIndex(key) {
   const text = String(key || "");
@@ -212,8 +215,8 @@ function renderSchedule() {
   const viewDate = parseDateOnly(viewDateInput.value);
   const dayThemeIndex = getDayThemeIndex(viewDateInput.value);
 
-  const entries = loadEntries();
-  const configuredRooms = loadRooms();
+  const entries = sharedPayload ? sharedPayload.entries : loadEntries();
+  const configuredRooms = sharedPayload ? sharedPayload.rooms : loadRooms();
   const entryRooms = Array.from(
     new Set(entries.map((entry) => String(entry.room || "").trim()).filter(Boolean))
   );
@@ -306,7 +309,13 @@ async function toggleTableFocusMode() {
 }
 
 async function refreshFromCloudAndRender() {
-  await cloudSyncPull();
+  if (sharedPayload) {
+    renderSchedule();
+    return;
+  }
+  if (isCloudSyncEnabled()) {
+    await cloudSyncPull();
+  }
   renderSchedule();
 }
 
@@ -323,12 +332,30 @@ tableFocusBtn.addEventListener("click", () => {
 window.addEventListener("resize", () => {
   if (pickerPopoverEl) positionDatePicker();
 });
-window.addEventListener("storage", renderSchedule);
+window.addEventListener("storage", () => {
+  if (!sharedPayload) renderSchedule();
+});
 document.addEventListener("fullscreenchange", syncTableFocusUi);
 
 async function initializeSchedulePage() {
   const todayStr = formatDateOnly(new Date());
   viewDateInput.value = todayStr;
+
+  const liveSharePayload = readPublicScheduleLiveSharePayload();
+  if (liveSharePayload && liveSharePayload.url && liveSharePayload.anonKey) {
+    setCloudConfig(liveSharePayload.url, liveSharePayload.anonKey);
+    isLiveShareMode = true;
+  }
+
+  sharedPayload = readPublicScheduleSharePayload();
+  if (isLiveShareMode) {
+    shareModeNoteEl.hidden = false;
+    shareModeNoteEl.textContent = "실시간 공유 링크 모드입니다. 최신 데이터가 자동 반영됩니다.";
+  } else if (sharedPayload) {
+    shareModeNoteEl.hidden = false;
+    shareModeNoteEl.textContent = "공유 링크 보기 모드입니다. 이 화면은 읽기 전용입니다.";
+  }
+
   await refreshFromCloudAndRender();
   syncTableFocusUi();
 }

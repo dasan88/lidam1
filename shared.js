@@ -6,6 +6,8 @@ const ROOM_STORAGE_KEY = "class_schedule_rooms_v1";
 const RESET_FLAG_KEY = "class_schedule_reset_done_v1";
 const CLOUD_CONFIG_KEY = "class_schedule_cloud_config_v1";
 const SUPABASE_STATE_TABLE = "app_state";
+const PUBLIC_SHARE_PARAM = "share";
+const PUBLIC_LIVE_SHARE_PARAM = "liveShare";
 
 if (!localStorage.getItem(RESET_FLAG_KEY)) {
   localStorage.removeItem(STORAGE_KEY);
@@ -204,6 +206,85 @@ function saveRooms(rooms) {
     .filter((room, idx, arr) => room && arr.indexOf(room) === idx);
   if (normalized.length === 0) return;
   localStorage.setItem(ROOM_STORAGE_KEY, JSON.stringify(normalized));
+}
+
+function encodeUtf8ToBase64Url(text) {
+  const bytes = new TextEncoder().encode(String(text));
+  let binary = "";
+  bytes.forEach((b) => {
+    binary += String.fromCharCode(b);
+  });
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+function decodeBase64UrlToUtf8(base64Url) {
+  let base64 = String(base64Url || "").replace(/-/g, "+").replace(/_/g, "/");
+  while (base64.length % 4 !== 0) base64 += "=";
+  const binary = atob(base64);
+  const bytes = Uint8Array.from(binary, (ch) => ch.charCodeAt(0));
+  return new TextDecoder().decode(bytes);
+}
+
+function buildPublicScheduleShareUrl() {
+  const payload = {
+    entries: loadEntries(),
+    rooms: loadRooms(),
+    generatedAt: new Date().toISOString(),
+  };
+  const encoded = encodeUtf8ToBase64Url(JSON.stringify(payload));
+  const url = new URL("schedule.html", window.location.href);
+  url.searchParams.set(PUBLIC_SHARE_PARAM, encoded);
+  return url.toString();
+}
+
+function buildPublicScheduleLiveShareUrl() {
+  const cfg = getCloudConfig();
+  if (!cfg.url || !cfg.anonKey) return "";
+
+  const payload = {
+    url: cfg.url,
+    anonKey: cfg.anonKey,
+    generatedAt: new Date().toISOString(),
+  };
+  const encoded = encodeUtf8ToBase64Url(JSON.stringify(payload));
+  const url = new URL("schedule.html", window.location.href);
+  url.searchParams.set(PUBLIC_LIVE_SHARE_PARAM, encoded);
+  return url.toString();
+}
+
+function readPublicScheduleSharePayload() {
+  const url = new URL(window.location.href);
+  const encoded = url.searchParams.get(PUBLIC_SHARE_PARAM);
+  if (!encoded) return null;
+  try {
+    const parsed = JSON.parse(decodeBase64UrlToUtf8(encoded));
+    return {
+      entries: Array.isArray(parsed.entries) ? parsed.entries : [],
+      rooms:
+        Array.isArray(parsed.rooms) && parsed.rooms.length > 0 ? parsed.rooms : [...DEFAULT_ROOMS],
+      generatedAt: String(parsed.generatedAt || ""),
+    };
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+}
+
+function readPublicScheduleLiveSharePayload() {
+  const url = new URL(window.location.href);
+  const encoded = url.searchParams.get(PUBLIC_LIVE_SHARE_PARAM);
+  if (!encoded) return null;
+  try {
+    const parsed = JSON.parse(decodeBase64UrlToUtf8(encoded));
+    return {
+      url: String(parsed.url || "").trim().replace(/\/$/, ""),
+      anonKey: String(parsed.anonKey || "").trim(),
+      generatedAt: String(parsed.generatedAt || ""),
+    };
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
 }
 
 function isEntryActiveOn(entry, targetDate, slot, room) {
