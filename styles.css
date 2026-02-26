@@ -364,9 +364,24 @@ h2 {
 }
 
 .room-admin h4 {
-  margin: 0 0 8px;
+  margin: 0;
   color: #173b73;
   font-size: 14px;
+}
+
+.room-admin-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.room-admin-head button {
+  min-width: 92px;
+}
+
+.room-admin-body.is-collapsed {
+  display: none;
 }
 
 .room-admin-row {
@@ -415,12 +430,15 @@ h2 {
 
 .share-link-box {
   margin-top: 10px;
-  display: grid;
-  gap: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
-.share-link-box input {
-  width: 100%;
+.share-link-box button {
+  min-width: 140px;
+  height: 44px;
 }
 
 .register-page input:not([type="checkbox"]),

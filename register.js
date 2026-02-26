@@ -15,6 +15,8 @@ const roomRenameNameEl = document.getElementById("room-rename-name");
 const addRoomBtn = document.getElementById("add-room-btn");
 const renameRoomBtn = document.getElementById("rename-room-btn");
 const deleteRoomBtn = document.getElementById("delete-room-btn");
+const roomAdminBodyEl = document.getElementById("room-admin-body");
+const toggleRoomAdminBtn = document.getElementById("toggle-room-admin-btn");
 const cloudUrlEl = document.getElementById("cloud-url");
 const cloudKeyEl = document.getElementById("cloud-key");
 const saveCloudConfigBtn = document.getElementById("save-cloud-config-btn");
@@ -23,11 +25,11 @@ const cloudStatusEl = document.getElementById("cloud-status");
 const cloudAdminBodyEl = document.getElementById("cloud-admin-body");
 const toggleCloudConfigBtn = document.getElementById("toggle-cloud-config-btn");
 const createPublicLinkBtn = document.getElementById("create-public-link-btn");
-const publicLinkOutputEl = document.getElementById("public-link-output");
 const formModeBadgeEl = document.getElementById("form-mode-badge");
 const cancelEditBtn = document.getElementById("cancel-edit-btn");
 const submitBtn = document.getElementById("submit-btn");
 const CAL_WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
+const ROOM_ADMIN_COLLAPSE_KEY = "roomAdminCollapsed";
 const CLOUD_CONFIG_COLLAPSE_KEY = "cloudConfigCollapsed";
 
 let pickerBackdropEl = null;
@@ -36,6 +38,7 @@ let pickerActiveInput = null;
 let pickerViewMonth = new Date();
 let editingEntryId = null;
 let isEntryListCollapsed = false;
+let isRoomAdminCollapsed = false;
 let isCloudConfigCollapsed = false;
 
 function getSelectedWeekdays() {
@@ -250,6 +253,12 @@ function syncCloudStatusUi() {
     : "현재: 로컬 모드";
 }
 
+function syncRoomAdminCollapseUi() {
+  roomAdminBodyEl.classList.toggle("is-collapsed", isRoomAdminCollapsed);
+  toggleRoomAdminBtn.textContent = isRoomAdminCollapsed ? "펼치기" : "접기";
+  localStorage.setItem(ROOM_ADMIN_COLLAPSE_KEY, isRoomAdminCollapsed ? "1" : "0");
+}
+
 function syncCloudConfigCollapseUi() {
   cloudAdminBodyEl.classList.toggle("is-collapsed", isCloudConfigCollapsed);
   toggleCloudConfigBtn.textContent = isCloudConfigCollapsed ? "펼치기" : "접기";
@@ -289,7 +298,7 @@ function resetFormToDefaults() {
   document.getElementById("time-저녁").value = "18:00";
 
   document.querySelectorAll('input[name="weekday"]').forEach((el) => {
-    el.checked = ["월", "화", "수", "목", "금"].includes(el.value);
+    el.checked = false;
   });
 
   const todayStr = formatDateOnly(new Date());
@@ -624,6 +633,10 @@ toggleEntryListBtn.addEventListener("click", () => {
   isEntryListCollapsed = !isEntryListCollapsed;
   syncEntryListCollapseUi();
 });
+toggleRoomAdminBtn.addEventListener("click", () => {
+  isRoomAdminCollapsed = !isRoomAdminCollapsed;
+  syncRoomAdminCollapseUi();
+});
 toggleCloudConfigBtn.addEventListener("click", () => {
   isCloudConfigCollapsed = !isCloudConfigCollapsed;
   syncCloudConfigCollapseUi();
@@ -655,7 +668,7 @@ testCloudSyncBtn.addEventListener("click", async () => {
   alert("연결 성공! 공유 DB와 동기화되었습니다.");
 });
 
-if (createPublicLinkBtn && publicLinkOutputEl) {
+if (createPublicLinkBtn) {
   createPublicLinkBtn.addEventListener("click", async () => {
     try {
       const isLive = isCloudSyncEnabled();
@@ -668,8 +681,6 @@ if (createPublicLinkBtn && publicLinkOutputEl) {
         alert("공유 링크 생성에 실패했습니다. 설정을 확인해 주세요.");
         return;
       }
-
-      publicLinkOutputEl.value = url;
 
       try {
         await navigator.clipboard.writeText(url);
@@ -800,6 +811,8 @@ async function initializeRegisterPage() {
   setEditMode(false);
   renderEntryList();
   syncEntryListCollapseUi();
+  isRoomAdminCollapsed = localStorage.getItem(ROOM_ADMIN_COLLAPSE_KEY) === "1";
+  syncRoomAdminCollapseUi();
   isCloudConfigCollapsed = localStorage.getItem(CLOUD_CONFIG_COLLAPSE_KEY) === "1";
   syncCloudConfigCollapseUi();
   syncCloudStatusUi();
