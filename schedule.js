@@ -21,6 +21,9 @@ let pickerBackdropEl = null;
 let pickerPopoverEl = null;
 let pickerViewMonth = new Date();
 let sharedPayload = null;
+let isLiveShareMode = false;
+let liveShareSnapshot = null;
+let hasLiveDataLoaded = false;
 
 function getThemeIndex(key) {
   const text = String(key || "");
@@ -213,8 +216,13 @@ function renderSchedule() {
   const viewDate = parseDateOnly(viewDateInput.value);
   const dayThemeIndex = getDayThemeIndex(viewDateInput.value);
 
-  const entries = sharedPayload ? sharedPayload.entries : loadEntries();
-  const configuredRooms = sharedPayload ? sharedPayload.rooms : loadRooms();
+  const baseData = sharedPayload
+    ? sharedPayload
+    : isLiveShareMode && !hasLiveDataLoaded && liveShareSnapshot
+      ? liveShareSnapshot
+      : { entries: loadEntries(), rooms: loadRooms() };
+  const entries = baseData.entries;
+  const configuredRooms = baseData.rooms;
   const entryRooms = Array.from(
     new Set(entries.map((entry) => String(entry.room || "").trim()).filter(Boolean))
   );
@@ -316,7 +324,8 @@ async function refreshFromCloudAndRender(options = {}) {
     renderSchedule();
   }
   if (isCloudSyncEnabled()) {
-    await cloudSyncPull();
+    const pulled = await cloudSyncPull();
+    if (pulled) hasLiveDataLoaded = true;
   }
   renderSchedule();
 }
@@ -346,6 +355,11 @@ async function initializeSchedulePage() {
   const liveSharePayload = readPublicScheduleLiveSharePayload();
   if (liveSharePayload && liveSharePayload.url && liveSharePayload.anonKey) {
     setCloudConfig(liveSharePayload.url, liveSharePayload.anonKey);
+    isLiveShareMode = true;
+    liveShareSnapshot = {
+      entries: liveSharePayload.entries || [],
+      rooms: liveSharePayload.rooms || loadRooms(),
+    };
   }
 
   sharedPayload = readPublicScheduleSharePayload();

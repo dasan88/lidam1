@@ -260,6 +260,8 @@ function buildPublicScheduleLiveShareUrl() {
   const payload = {
     url: cfg.url,
     anonKey: cfg.anonKey,
+    entries: loadEntries(),
+    rooms: loadRooms(),
     generatedAt: new Date().toISOString(),
   };
   const encoded = encodeUtf8ToBase64Url(JSON.stringify(payload));
@@ -295,6 +297,9 @@ function readPublicScheduleLiveSharePayload() {
     return {
       url: String(parsed.url || "").trim().replace(/\/$/, ""),
       anonKey: String(parsed.anonKey || "").trim(),
+      entries: Array.isArray(parsed.entries) ? parsed.entries : [],
+      rooms:
+        Array.isArray(parsed.rooms) && parsed.rooms.length > 0 ? parsed.rooms : [...DEFAULT_ROOMS],
       generatedAt: String(parsed.generatedAt || ""),
     };
   } catch (error) {
