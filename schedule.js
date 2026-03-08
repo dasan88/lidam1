@@ -27,6 +27,10 @@ let liveShareSnapshot = null;
 let hasLiveDataLoaded = false;
 let isTableFocusFallback = false;
 
+function shouldUseMobileScheduleLayout() {
+  return window.matchMedia("(max-width: 960px), (pointer: coarse)").matches;
+}
+
 function getThemeIndex(key) {
   const text = String(key || "");
   let hash = 0;
@@ -356,7 +360,11 @@ function isFullscreenFocused() {
 }
 
 function shouldUseTableFocusFallback() {
-  return window.matchMedia("(max-width: 900px), (pointer: coarse)").matches;
+  return shouldUseMobileScheduleLayout();
+}
+
+function syncMobileScheduleLayoutUi() {
+  document.body.classList.toggle("is-mobile-schedule", shouldUseMobileScheduleLayout());
 }
 
 function syncTableFocusUi() {
@@ -424,6 +432,8 @@ tableFocusBtn.addEventListener("click", () => {
 });
 window.addEventListener("resize", () => {
   if (pickerPopoverEl) positionDatePicker();
+  syncMobileScheduleLayoutUi();
+  syncTableFocusUi();
 });
 window.addEventListener("storage", () => {
   if (!sharedPayload) renderSchedule();
@@ -446,6 +456,7 @@ async function initializeSchedulePage() {
 
   sharedPayload = readPublicScheduleSharePayload();
 
+  syncMobileScheduleLayoutUi();
   syncTableFocusUi();
   refreshFromCloudAndRender({ preferImmediate: true }).catch(() => {
     renderSchedule();
