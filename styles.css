@@ -556,6 +556,12 @@ h1 {
 }
 
 .schedule-page .class-chip {
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 8px 10px;
+  max-width: 100%;
   font-size: 1.4em;
   padding: 12px 16px;
   border: 1px solid var(--chip-border, #b6cdf7);
@@ -567,13 +573,16 @@ h1 {
 
 .schedule-page .class-name {
   font-weight: 700;
+  white-space: nowrap;
+  max-width: 100%;
 }
 
 .schedule-page .class-time {
-  margin-left: 10px;
+  margin-left: 0;
   font-size: 1em;
   font-weight: 600;
   color: var(--chip-time-color, #0a5bd3);
+  white-space: nowrap;
 }
 
 .schedule-page th:first-child,
