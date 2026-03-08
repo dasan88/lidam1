@@ -6,17 +6,40 @@
   <title>강의실 수업 배치표</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
-<body>
+<body class="home-page">
   <main class="container">
-    <header class="header">
-      <h1>강의실 수업 배치표</h1>
-      <p class="version-tag">버전 v1.5</p>
-      <p class="now">원하는 메뉴를 선택하세요.</p>
+    <header class="header home-header">
+      <div class="hero-copy">
+        <p class="page-kicker">LIDAM CLASS BOARD</p>
+        <h1>강의실 수업 배치표</h1>
+        <p class="version-tag">버전 v1.5</p>
+        <p class="now">등록과 조회를 한 화면 흐름으로 정리한 운영용 시간표입니다.</p>
+      </div>
+      <div class="hero-stats">
+        <div class="hero-stat">
+          <strong>2개</strong>
+          <span>강의실 기본 구성</span>
+        </div>
+        <div class="hero-stat">
+          <strong>3개</strong>
+          <span>오전·오후·저녁 시간대</span>
+        </div>
+        <div class="hero-stat">
+          <strong>실시간</strong>
+          <span>공유 링크 지원</span>
+        </div>
+      </div>
     </header>
 
     <section class="card menu-card">
-      <a class="menu-link" href="register.html">수업 등록 페이지로 이동</a>
-      <a class="menu-link" href="schedule.html">시간표 보기 페이지로 이동</a>
+      <a class="menu-link" href="register.html">
+        <span class="menu-link-title">수업 등록</span>
+        <span class="menu-link-note">기간, 요일, 시간대를 설정하고 강의실 운영 정보를 저장합니다.</span>
+      </a>
+      <a class="menu-link" href="schedule.html">
+        <span class="menu-link-title">시간표 보기</span>
+        <span class="menu-link-note">날짜별 시간표를 크게 확인하고 화면 출력용 링크로 공유합니다.</span>
+      </a>
     </section>
   </main>
 </body>
