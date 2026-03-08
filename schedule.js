@@ -48,6 +48,13 @@ function getEntryThemeKey(entry) {
   return entry.id || entry.name;
 }
 
+function formatSlotDisplayLabel(slot) {
+  if (slot === "오전") return "오 전";
+  if (slot === "오후") return "오 후";
+  if (slot === "저녁") return "저 녁";
+  return slot;
+}
+
 function buildDayThemeMap(entries, viewDate, rooms) {
   const map = new Map();
   const used = new Set();
@@ -211,7 +218,7 @@ function renderScheduleHead(rooms) {
 
   SLOT_ORDER.forEach((slot) => {
     const th = document.createElement("th");
-    th.textContent = slot;
+    th.textContent = formatSlotDisplayLabel(slot);
     tr.appendChild(th);
   });
 
@@ -261,7 +268,7 @@ function renderScheduleMobileList(rooms, filteredEntries, viewDate, dayThemeMap,
 
       const slotLabel = document.createElement("div");
       slotLabel.className = "mobile-slot-label";
-      slotLabel.textContent = slot;
+      slotLabel.textContent = formatSlotDisplayLabel(slot);
       slotBlock.appendChild(slotLabel);
 
       const slotContent = document.createElement("div");
