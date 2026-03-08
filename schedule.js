@@ -24,6 +24,7 @@ let sharedPayload = null;
 let isLiveShareMode = false;
 let liveShareSnapshot = null;
 let hasLiveDataLoaded = false;
+let isTableFocusFallback = false;
 
 function getThemeIndex(key) {
   const text = String(key || "");
@@ -300,18 +301,49 @@ function shiftViewDate(days) {
   renderSchedule();
 }
 
+function isFullscreenFocused() {
+  return document.fullscreenElement === scheduleRoot;
+}
+
+function shouldUseTableFocusFallback() {
+  return window.matchMedia("(max-width: 900px), (pointer: coarse)").matches;
+}
+
 function syncTableFocusUi() {
-  const isFocused = document.fullscreenElement === scheduleRoot;
+  const isFocused = isFullscreenFocused() || isTableFocusFallback;
   document.body.classList.toggle("table-focus", isFocused);
   tableFocusBtn.textContent = isFocused ? "화면 출력 해제" : "화면 출력";
 }
 
+function setTableFocusFallback(nextValue) {
+  isTableFocusFallback = nextValue;
+  if (nextValue) {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+  syncTableFocusUi();
+}
+
 async function toggleTableFocusMode() {
-  if (document.fullscreenElement === scheduleRoot) {
+  if (isTableFocusFallback) {
+    setTableFocusFallback(false);
+    return;
+  }
+
+  if (isFullscreenFocused()) {
     await document.exitFullscreen();
     return;
   }
-  await scheduleRoot.requestFullscreen();
+
+  if (shouldUseTableFocusFallback() || typeof scheduleRoot.requestFullscreen !== "function") {
+    setTableFocusFallback(true);
+    return;
+  }
+
+  try {
+    await scheduleRoot.requestFullscreen();
+  } catch {
+    setTableFocusFallback(true);
+  }
 }
 
 async function refreshFromCloudAndRender(options = {}) {
@@ -337,7 +369,7 @@ roomFilterEl.addEventListener("change", renderSchedule);
 classSearchEl.addEventListener("input", renderSchedule);
 tableFocusBtn.addEventListener("click", () => {
   toggleTableFocusMode().catch(() => {
-    alert("전체화면 전환을 사용할 수 없는 환경입니다.");
+    setTableFocusFallback(!isTableFocusFallback);
   });
 });
 window.addEventListener("resize", () => {
