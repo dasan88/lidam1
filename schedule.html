@@ -9,30 +9,37 @@
 <body class="schedule-page">
   <main id="schedule-root" class="container schedule-container">
     <header class="header schedule-header">
-      <h1>시간표 보기</h1>
-      <p class="version-tag">버전 v1.5</p>
+      <div class="schedule-header-copy">
+        <p class="page-kicker">LIVE VIEW BOARD</p>
+        <h1>시간표 보기</h1>
+        <p class="version-tag">버전 v1.5</p>
+        <p class="schedule-lead">날짜별 강의실 운영 현황을 빠르게 확인하고 바로 화면 출력할 수 있습니다.</p>
+      </div>
       <nav class="top-nav">
         <a href="index.html">홈</a>
         <a href="register.html">수업 등록</a>
       </nav>
     </header>
 
-    <div class="date-nav">
-      <button id="prev-day" type="button">이전 날짜</button>
-      <input id="view-date" class="date-input" type="text" readonly />
-      <button id="next-day" type="button">다음 날짜</button>
-      <button id="table-focus-btn" type="button">화면 출력</button>
-    </div>
+    <section class="schedule-controls">
+      <div class="date-nav">
+        <button id="prev-day" type="button">이전 날짜</button>
+        <input id="view-date" class="date-input" type="text" readonly />
+        <button id="next-day" type="button">다음 날짜</button>
+        <button id="table-focus-btn" type="button">화면 출력</button>
+      </div>
 
-    <div class="filter-nav">
-      <label for="room-filter">강의실 필터</label>
-      <select id="room-filter">
-        <option value="all">전체 강의실</option>
-      </select>
-      <label for="class-search">수업명 검색</label>
-      <input id="class-search" type="text" placeholder="예: 특허법" />
-    </div>
-    <section class="card">
+      <div class="filter-nav">
+        <label for="room-filter">강의실 필터</label>
+        <select id="room-filter">
+          <option value="all">전체 강의실</option>
+        </select>
+        <label for="class-search">수업명 검색</label>
+        <input id="class-search" type="text" placeholder="예: 특허법" />
+      </div>
+    </section>
+
+    <section class="card schedule-board-card">
       <p id="now" class="now schedule-now"></p>
       <table>
         <thead id="schedule-head"></thead>
