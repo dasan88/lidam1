@@ -1,6 +1,7 @@
 const nowEl = document.getElementById("now");
 const scheduleHead = document.getElementById("schedule-head");
 const scheduleBody = document.getElementById("schedule-body");
+const scheduleMobileList = document.getElementById("schedule-mobile-list");
 const viewDateInput = document.getElementById("view-date");
 const prevDayBtn = document.getElementById("prev-day");
 const nextDayBtn = document.getElementById("next-day");
@@ -213,6 +214,76 @@ function renderScheduleHead(rooms) {
   scheduleHead.appendChild(tr);
 }
 
+function createClassChip(entry, slot, themeIndex) {
+  const chip = document.createElement("div");
+  chip.className = "class-chip";
+  const theme = CHIP_THEMES[themeIndex];
+  chip.style.setProperty("--chip-bg", theme.bg);
+  chip.style.setProperty("--chip-border", theme.border);
+  chip.style.setProperty("--chip-name-color", theme.name);
+  chip.style.setProperty("--chip-time-color", theme.time);
+
+  const slotTime = (entry.slotTimes && entry.slotTimes[slot]) || entry.startTime || "--:--";
+  const nameSpan = document.createElement("span");
+  nameSpan.className = "class-name";
+  nameSpan.textContent = entry.name;
+
+  const timeSpan = document.createElement("span");
+  timeSpan.className = "class-time";
+  timeSpan.textContent = slotTime;
+
+  chip.appendChild(nameSpan);
+  chip.appendChild(timeSpan);
+  return chip;
+}
+
+function renderScheduleMobileList(rooms, filteredEntries, viewDate, dayThemeMap, dayThemeIndex) {
+  scheduleMobileList.innerHTML = "";
+
+  rooms.forEach((room) => {
+    const roomSection = document.createElement("section");
+    roomSection.className = "mobile-room-card";
+
+    const title = document.createElement("h3");
+    title.className = "mobile-room-title";
+    title.textContent = room;
+    roomSection.appendChild(title);
+
+    SLOT_ORDER.forEach((slot) => {
+      const matched = filteredEntries.filter((entry) => isEntryActiveOn(entry, viewDate, slot, room));
+
+      const slotBlock = document.createElement("div");
+      slotBlock.className = "mobile-slot-block";
+
+      const slotLabel = document.createElement("div");
+      slotLabel.className = "mobile-slot-label";
+      slotLabel.textContent = slot;
+      slotBlock.appendChild(slotLabel);
+
+      const slotContent = document.createElement("div");
+      slotContent.className = "mobile-slot-content";
+
+      if (matched.length === 0) {
+        const empty = document.createElement("span");
+        empty.className = "mobile-slot-empty";
+        empty.textContent = "등록된 수업 없음";
+        slotContent.appendChild(empty);
+      } else {
+        matched.forEach((entry) => {
+          const key = getEntryThemeKey(entry);
+          const themeIndex = dayThemeMap.has(key) ? dayThemeMap.get(key) : dayThemeIndex;
+          slotContent.appendChild(createClassChip(entry, slot, themeIndex));
+        });
+      }
+
+      slotBlock.appendChild(slotContent);
+      roomSection.appendChild(slotBlock);
+    });
+
+    scheduleMobileList.appendChild(roomSection);
+  });
+}
+
 function renderSchedule() {
   const viewDate = parseDateOnly(viewDateInput.value);
   const dayThemeIndex = getDayThemeIndex(viewDateInput.value);
@@ -243,6 +314,7 @@ function renderSchedule() {
   const dayThemeMap = buildDayThemeMap(filteredEntries, viewDate, rooms);
   renderScheduleHead(rooms);
   scheduleBody.innerHTML = "";
+  renderScheduleMobileList(rooms, filteredEntries, viewDate, dayThemeMap, dayThemeIndex);
 
   rooms.forEach((room) => {
     const tr = document.createElement("tr");
@@ -259,31 +331,9 @@ function renderSchedule() {
         td.textContent = "-";
       } else {
         matched.forEach((entry) => {
-          const chip = document.createElement("div");
-          chip.className = "class-chip";
           const key = getEntryThemeKey(entry);
           const themeIndex = dayThemeMap.has(key) ? dayThemeMap.get(key) : dayThemeIndex;
-          const theme = CHIP_THEMES[themeIndex];
-          chip.style.setProperty("--chip-bg", theme.bg);
-          chip.style.setProperty("--chip-border", theme.border);
-          chip.style.setProperty("--chip-name-color", theme.name);
-          chip.style.setProperty("--chip-time-color", theme.time);
-
-          const slotTime =
-            (entry.slotTimes && entry.slotTimes[slot]) ||
-            entry.startTime ||
-            "--:--";
-          const nameSpan = document.createElement("span");
-          nameSpan.className = "class-name";
-          nameSpan.textContent = entry.name;
-
-          const timeSpan = document.createElement("span");
-          timeSpan.className = "class-time";
-          timeSpan.textContent = slotTime;
-
-          chip.appendChild(nameSpan);
-          chip.appendChild(timeSpan);
-          td.appendChild(chip);
+          td.appendChild(createClassChip(entry, slot, themeIndex));
         });
       }
 
