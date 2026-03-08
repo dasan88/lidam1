@@ -8,6 +8,11 @@ const CLOUD_CONFIG_KEY = "class_schedule_cloud_config_v1";
 const SUPABASE_STATE_TABLE = "app_state";
 const PUBLIC_SHARE_PARAM = "share";
 const PUBLIC_LIVE_SHARE_PARAM = "liveShare";
+const DEFAULT_CLOUD_CONFIG = {
+  url: "https://ftopmidxpuqvjsyvwsrx.supabase.co",
+  anonKey:
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ0b3BtaWR4cHVxdmpzeXZ3c3J4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2ODc2NDcsImV4cCI6MjA4NzI2MzY0N30.GDbNkq9oI1EYvIk7ylrc4N4GHUKMaLtF29bUktOPTww",
+};
 
 if (!localStorage.getItem(RESET_FLAG_KEY)) {
   localStorage.removeItem(STORAGE_KEY);
@@ -19,25 +24,26 @@ function isCloudSyncEnabled() {
   return Boolean(cfg.url && cfg.anonKey);
 }
 
+function normalizeCloudConfig(url, anonKey) {
+  return {
+    url: String(url || "").trim().replace(/\/$/, "") || DEFAULT_CLOUD_CONFIG.url,
+    anonKey: String(anonKey || "").trim() || DEFAULT_CLOUD_CONFIG.anonKey,
+  };
+}
+
 function getCloudConfig() {
   const raw = localStorage.getItem(CLOUD_CONFIG_KEY);
-  if (!raw) return { url: "", anonKey: "" };
+  if (!raw) return { ...DEFAULT_CLOUD_CONFIG };
   try {
     const parsed = JSON.parse(raw);
-    return {
-      url: String(parsed.url || "").trim().replace(/\/$/, ""),
-      anonKey: String(parsed.anonKey || "").trim(),
-    };
+    return normalizeCloudConfig(parsed.url, parsed.anonKey);
   } catch {
-    return { url: "", anonKey: "" };
+    return { ...DEFAULT_CLOUD_CONFIG };
   }
 }
 
 function setCloudConfig(url, anonKey) {
-  const normalized = {
-    url: String(url || "").trim().replace(/\/$/, ""),
-    anonKey: String(anonKey || "").trim(),
-  };
+  const normalized = normalizeCloudConfig(url, anonKey);
   localStorage.setItem(CLOUD_CONFIG_KEY, JSON.stringify(normalized));
   return normalized;
 }
