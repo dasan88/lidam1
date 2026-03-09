@@ -496,7 +496,7 @@ h1 {
   display: grid;
   grid-template-columns: 72px minmax(0, 1fr);
   gap: 10px;
-  align-items: start;
+  align-items: center;
   padding: 10px 0;
   border-top: 1px solid rgba(84, 125, 178, 0.12);
 }
@@ -1420,6 +1420,7 @@ th {
   .schedule-page.is-mobile-schedule.table-focus .mobile-slot-block {
     grid-template-columns: 64px minmax(0, 1fr);
     gap: 8px;
+    align-items: center;
   }
 
   .schedule-page.is-mobile-schedule.table-focus .mobile-slot-label {
