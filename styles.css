@@ -513,7 +513,8 @@ h1 {
   align-self: stretch;
   min-height: 100%;
   padding: 10px 8px;
-  border-radius: 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(103, 143, 194, 0.22);
   background: linear-gradient(145deg, rgba(218, 233, 252, 0.98) 0%, rgba(203, 223, 248, 0.98) 100%);
   color: #1a4a79;
   font-size: 13px;
@@ -1325,7 +1326,8 @@ th {
     align-self: stretch;
     min-height: 100%;
     padding: 10px 8px;
-    border-radius: 14px;
+    border-radius: 8px;
+    border: 1px solid rgba(103, 143, 194, 0.22);
     background: linear-gradient(145deg, rgba(218, 233, 252, 0.98) 0%, rgba(203, 223, 248, 0.98) 100%);
     color: #1a4a79;
     font-size: 13px;
@@ -1436,6 +1438,7 @@ th {
   .schedule-page.is-mobile-schedule.table-focus .mobile-slot-label {
     padding: 7px 8px;
     font-size: 12px;
+    border-radius: 8px;
   }
 
   .schedule-page.table-focus th,
