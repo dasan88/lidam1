@@ -468,6 +468,10 @@ h1 {
   display: none;
 }
 
+.schedule-page.is-mobile-schedule.table-focus table {
+  display: none !important;
+}
+
 .schedule-page.is-mobile-schedule .schedule-mobile-list {
   display: grid;
   gap: 14px;
@@ -1376,6 +1380,11 @@ th {
     height: auto;
     min-height: calc(100dvh - 12px);
     overflow: visible;
+    background: linear-gradient(180deg, rgba(243, 249, 255, 0.98) 0%, rgba(229, 240, 252, 0.98) 100%);
+  }
+
+  .schedule-page.is-mobile-schedule.table-focus .schedule-board-card::before {
+    display: none;
   }
 
   .schedule-page.table-focus .schedule-now {
