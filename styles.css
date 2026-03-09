@@ -496,7 +496,7 @@ h1 {
   display: grid;
   grid-template-columns: 72px minmax(0, 1fr);
   gap: 10px;
-  align-items: center;
+  align-items: stretch;
   padding: 10px 0;
   border-top: 1px solid rgba(84, 125, 178, 0.12);
 }
@@ -507,6 +507,10 @@ h1 {
 }
 
 .schedule-page.is-mobile-schedule .mobile-slot-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: stretch;
   padding: 8px 10px;
   border-radius: 999px;
   background: linear-gradient(145deg, rgba(218, 233, 252, 0.98) 0%, rgba(203, 223, 248, 0.98) 100%);
@@ -1420,7 +1424,7 @@ th {
   .schedule-page.is-mobile-schedule.table-focus .mobile-slot-block {
     grid-template-columns: 64px minmax(0, 1fr);
     gap: 8px;
-    align-items: center;
+    align-items: stretch;
   }
 
   .schedule-page.is-mobile-schedule.table-focus .mobile-slot-label {
