@@ -464,6 +464,10 @@ h1 {
   display: none;
 }
 
+.schedule-page.is-mobile-schedule.table-focus .schedule-desktop-table {
+  display: none;
+}
+
 .schedule-page.is-mobile-schedule .schedule-mobile-list {
   display: grid;
   gap: 14px;
