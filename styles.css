@@ -622,6 +622,12 @@ h1 {
 
 .schedule-page.is-mobile-schedule.table-focus {
   overflow: auto;
+  background: #e7f1fc;
+}
+
+.schedule-page.is-mobile-schedule.table-focus::before,
+.schedule-page.is-mobile-schedule.table-focus::after {
+  display: none;
 }
 
 .schedule-page.table-focus #schedule-root {
@@ -1367,6 +1373,7 @@ th {
     height: auto;
     min-height: 100dvh;
     padding: 6px;
+    background: #e7f1fc;
   }
 
   .schedule-page.table-focus .schedule-board-card {
@@ -1381,10 +1388,19 @@ th {
     min-height: calc(100dvh - 12px);
     overflow: visible;
     background: linear-gradient(180deg, rgba(243, 249, 255, 0.98) 0%, rgba(229, 240, 252, 0.98) 100%);
+    position: relative;
+    z-index: 1;
+    border: 1px solid rgba(120, 158, 203, 0.2);
+    box-shadow: none;
   }
 
   .schedule-page.is-mobile-schedule.table-focus .schedule-board-card::before {
     display: none;
+  }
+
+  .schedule-page.is-mobile-schedule.table-focus .schedule-mobile-list {
+    position: relative;
+    z-index: 2;
   }
 
   .schedule-page.table-focus .schedule-now {
