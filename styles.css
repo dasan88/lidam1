@@ -511,8 +511,9 @@ h1 {
   align-items: center;
   justify-content: center;
   align-self: stretch;
-  padding: 8px 10px;
-  border-radius: 999px;
+  min-height: 100%;
+  padding: 10px 8px;
+  border-radius: 14px;
   background: linear-gradient(145deg, rgba(218, 233, 252, 0.98) 0%, rgba(203, 223, 248, 0.98) 100%);
   color: #1a4a79;
   font-size: 13px;
@@ -1322,8 +1323,9 @@ th {
     align-items: center;
     justify-content: center;
     align-self: stretch;
-    padding: 8px 10px;
-    border-radius: 999px;
+    min-height: 100%;
+    padding: 10px 8px;
+    border-radius: 14px;
     background: linear-gradient(145deg, rgba(218, 233, 252, 0.98) 0%, rgba(203, 223, 248, 0.98) 100%);
     color: #1a4a79;
     font-size: 13px;
